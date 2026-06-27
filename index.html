@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Bridget's Tracker"/>
+<meta name="theme-color" content="#0d0f18"/>
+<title>Bridget's Macro Tracker</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  body{background:#0d0f18;color:#f0eeff;font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;min-height:100vh;padding-bottom:env(safe-area-inset-bottom);}
+  button{font-family:inherit;cursor:pointer;}
+  input,textarea{font-family:inherit;}
+  ::-webkit-scrollbar{display:none;}
+
+  /* HEADER */
+  #header{padding:calc(env(safe-area-inset-top) + 16px) 16px 14px;background:#161927;border-bottom:1px solid #252840;}
+  #header h1{font-size:19px;font-weight:800;background:linear-gradient(135deg,#a78bfa,#34d399);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+  #header p{color:#7b7f9e;font-size:12px;margin-top:3px;}
+
+  /* TABS */
+  #tabs{display:flex;background:#161927;border-bottom:1px solid #252840;overflow-x:auto;}
+  .tab-btn{flex:1 0 auto;min-width:60px;padding:11px 2px;text-align:center;font-size:11px;font-weight:500;color:#7b7f9e;border:none;border-bottom:2px solid transparent;background:none;transition:all .2s;}
+  .tab-btn.active{font-weight:700;color:#a78bfa;border-bottom-color:#7c5cfc;}
+  .tab-btn .tab-icon{font-size:16px;display:block;}
+  .tab-btn .tab-label{font-size:10px;margin-top:2px;text-transform:capitalize;}
+
+  /* SECTIONS */
+  .section{padding:14px 14px 0;}
+  .card{background:#161927;border-radius:14px;border:1px solid #252840;padding:14px;margin-bottom:12px;}
+  .card-teal{border-color:#2dd4bf44;background:#2dd4bf0d;}
+  .lbl{font-size:10px;font-weight:700;color:#7b7f9e;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;display:block;}
+  .row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+
+  /* INPUTS — iOS PWA keyboard fix */
+  .inp{width:100%;background:#0d0f18;border:1px solid #252840;border-radius:10px;padding:11px 13px;color:#f0eeff;font-size:16px;outline:none;-webkit-appearance:none;appearance:none;opacity:1;-webkit-user-select:text;user-select:text;cursor:text;pointer-events:auto;}
+  .inp::placeholder{color:#7b7f9e;}
+  textarea.inp{resize:none;-webkit-user-select:text;user-select:text;}
+
+  /* BUTTONS */
+  .btn{border:none;border-radius:10px;padding:11px 16px;font-weight:700;font-size:13px;width:100%;margin-top:10px;color:#fff;}
+  .btn-accent{background:#7c5cfc;}
+  .btn-green{background:#1a5c3a;}
+  .btn-orange{background:#fb923c;}
+  .btn-gray{background:#252840;}
+  .btn-small{padding:8px 0;font-size:12px;margin-top:0;flex:1;}
+  .btn-blue-sm{background:#1a3a5c;}
+  .btn:disabled{opacity:.6;}
+
+  /* PILL */
+  .pill{border-radius:99px;padding:3px 9px;font-size:11px;font-weight:700;display:inline-block;}
+
+  /* PROGRESS BAR */
+  .bar-bg{background:#252840;border-radius:99px;height:5px;overflow:hidden;}
+  .bar-fill{height:100%;border-radius:99px;transition:width .5s;}
+
+  /* RINGS */
+  .rings-row{display:flex;justify-content:space-around;}
+  .ring-wrap{display:flex;flex-direction:column;align-items:center;gap:3px;}
+  .ring-label{color:#7b7f9e;font-size:10px;}
+  .ring-sub{font-size:9px;}
+
+  /* WATER BTNS */
+  .water-row{display:flex;gap:6px;margin-top:10px;}
+
+  /* PHOTO */
+  .photo-drop{border:2px dashed #252840;border-radius:10px;padding:20px 0;text-align:center;cursor:pointer;margin-bottom:10px;color:#7b7f9e;font-size:13px;}
+  .photo-preview{position:relative;margin-bottom:10px;}
+  .photo-preview img{width:100%;border-radius:10px;max-height:200px;object-fit:cover;}
+  .photo-clear{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.7);border:none;border-radius:50%;color:#fff;width:28px;height:28px;font-size:14px;cursor:pointer;}
+  .photo-badge{position:absolute;bottom:8px;left:8px;background:rgba(0,0,0,.7);border-radius:99px;padding:3px 10px;font-size:11px;color:#fff;}
+
+  /* MEAL CARD */
+  .meal-img{width:100%;border-radius:8px;max-height:140px;object-fit:cover;margin-bottom:10px;}
+  .meal-pills{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+  .remove-btn{background:none;border:none;color:#f87171;font-size:11px;margin-top:8px;padding:0;}
+
+  /* DAY SCROLL */
+  .day-scroll{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;padding-bottom:2px;}
+  .day-btn{flex-shrink:0;padding:7px 12px;border-radius:10px;font-size:12px;font-weight:500;color:#7b7f9e;border:1px solid #252840;background:#161927;cursor:pointer;text-align:center;line-height:1.4;}
+  .day-btn.active{background:#7c5cfc;color:#fff;border-color:#7c5cfc;font-weight:700;}
+
+  /* EVENT */
+  .event-row{display:flex;gap:10px;margin-bottom:10px;align-items:flex-start;}
+  .event-bar{width:4px;min-height:40px;border-radius:99px;flex-shrink:0;margin-top:2px;}
+  .event-title{font-size:13px;font-weight:600;}
+  .event-time{font-size:11px;color:#7b7f9e;margin-top:2px;}
+
+  /* RECIPE */
+  .recipe-cats{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+  .cat-btn{padding:6px 12px;border-radius:99px;font-size:12px;border:1px solid #252840;background:#0d0f18;color:#7b7f9e;cursor:pointer;}
+  .cat-btn.active{background:#7c5cfc;color:#fff;border-color:#7c5cfc;font-weight:700;}
+  .recipe-expand-btn{background:none;border:1px solid #252840;border-radius:8px;color:#a78bfa;font-size:12px;font-weight:600;padding:7px 14px;width:100%;cursor:pointer;}
+  .step-num{min-width:20px;height:20px;border-radius:50%;background:#7c5cfc;color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+  .step-row{display:flex;gap:8px;margin-bottom:8px;align-items:flex-start;}
+  .tip-box{background:#fb923c15;border-radius:10px;padding:10px 12px;margin-top:8px;border:1px solid #fb923c33;}
+
+  /* TODAY cal workouts */
+  .today-workout-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+  .today-workout-bar{width:3px;height:36px;border-radius:99px;background:#2dd4bf;flex-shrink:0;}
+
+  /* error */
+  .err{color:#f87171;font-size:12px;margin-top:6px;}
+
+  /* empty state */
+  .empty{text-align:center;color:#7b7f9e;padding:28px;}
+  .empty .ico{font-size:28px;margin-bottom:6px;}
+  .empty p{font-size:13px;}
+
+  /* cal badge */
+  .cal-badge{font-size:10px;background:#7c5cfc22;border-radius:99px;padding:2px 8px;color:#a78bfa;}
+  .cal-tag{background:#2dd4bf22;color:#2dd4bf;border-radius:99px;padding:1px 7px;font-size:10px;font-weight:700;}
+
+  /* goal row */
+  .goal-val{font-weight:700;font-size:13px;}
+  .goal-label{color:#7b7f9e;font-size:13px;}
+</style>
+</head>
+<body>
+
+<div id="header">
+  <h1>Bridget's Macro Tracker</h1>
+  <p id="today-date"></p>
+</div>
+
+<div id="tabs">
+  <button class="tab-btn active" data-tab="today" onclick="switchTab('today')">
+    <span class="tab-icon">📊</span><span class="tab-label">Today</span>
+  </button>
+  <button class="tab-btn" data-tab="meals" onclick="switchTab('meals')">
+    <span class="tab-icon">🥗</span><span class="tab-label">Meals</span>
+  </button>
+  <button class="tab-btn" data-tab="workouts" onclick="switchTab('workouts')">
+    <span class="tab-icon">🏋️</span><span class="tab-label">Workouts</span>
+  </button>
+  <button class="tab-btn" data-tab="recipes" onclick="switchTab('recipes')">
+    <span class="tab-icon">👩‍🍳</span><span class="tab-label">Recipes</span>
+  </button>
+  <button class="tab-btn" data-tab="schedule" onclick="switchTab('schedule')">
+    <span class="tab-icon">📅</span><span class="tab-label">Schedule</span>
+  </button>
+</div>
+
+<!-- ── TODAY ── -->
+<div id="tab-today" class="section">
+  <div class="card">
+    <span class="lbl">Calories</span>
+    <div style="display:flex;align-items:flex-end;gap:6px;margin-bottom:10px;">
+      <span id="cal-big" style="font-size:44px;font-weight:900;line-height:1;letter-spacing:-2px;color:#fbbf24;">0</span>
+      <span style="color:#7b7f9e;font-size:14px;margin-bottom:5px;">/ 3067 kcal</span>
+    </div>
+    <div class="bar-bg"><div id="cal-bar" class="bar-fill" style="width:0%;background:#fbbf24;"></div></div>
+    <div id="cal-burned-row" style="display:none;margin-top:8px;color:#34d399;font-size:12px;"></div>
+  </div>
+
+  <div class="card">
+    <span class="lbl">Macros</span>
+    <div class="rings-row">
+      <div class="ring-wrap">
+        <svg width="64" height="64"><circle cx="32" cy="32" r="26" fill="none" stroke="#252840" stroke-width="5"/><circle id="ring-protein" cx="32" cy="32" r="26" fill="none" stroke="#7c5cfc" stroke-width="5" stroke-dasharray="0 163.4" stroke-linecap="round" transform="rotate(-90 32 32)" style="transition:stroke-dasharray .5s"/><text x="32" y="32" text-anchor="middle" dominant-baseline="middle" fill="#f0eeff" font-size="10" font-weight="700" id="ring-protein-val">0</text></svg>
+        <span class="ring-label">Protein</span><span class="ring-sub" style="color:#7c5cfc;">/191g</span>
+      </div>
+      <div class="ring-wrap">
+        <svg width="64" height="64"><circle cx="32" cy="32" r="26" fill="none" stroke="#252840" stroke-width="5"/><circle id="ring-carbs" cx="32" cy="32" r="26" fill="none" stroke="#fbbf24" stroke-width="5" stroke-dasharray="0 163.4" stroke-linecap="round" transform="rotate(-90 32 32)" style="transition:stroke-dasharray .5s"/><text x="32" y="32" text-anchor="middle" dominant-baseline="middle" fill="#f0eeff" font-size="10" font-weight="700" id="ring-carbs-val">0</text></svg>
+        <span class="ring-label">Carbs</span><span class="ring-sub" style="color:#fbbf24;">/345g</span>
+      </div>
+      <div class="ring-wrap">
+        <svg width="64" height="64"><circle cx="32" cy="32" r="26" fill="none" stroke="#252840" stroke-width="5"/><circle id="ring-fats" cx="32" cy="32" r="26" fill="none" stroke="#34d399" stroke-width="5" stroke-dasharray="0 163.4" stroke-linecap="round" transform="rotate(-90 32 32)" style="transition:stroke-dasharray .5s"/><text x="32" y="32" text-anchor="middle" dominant-baseline="middle" fill="#f0eeff" font-size="10" font-weight="700" id="ring-fats-val">0</text></svg>
+        <span class="ring-label">Fats</span><span class="ring-sub" style="color:#34d399;">/102g</span>
+      </div>
+      <div class="ring-wrap">
+        <svg width="64" height="64"><circle cx="32" cy="32" r="26" fill="none" stroke="#252840" stroke-width="5"/><circle id="ring-fiber" cx="32" cy="32" r="26" fill="none" stroke="#60a5fa" stroke-width="5" stroke-dasharray="0 163.4" stroke-linecap="round" transform="rotate(-90 32 32)" style="transition:stroke-dasharray .5s"/><text x="32" y="32" text-anchor="middle" dominant-baseline="middle" fill="#f0eeff" font-size="10" font-weight="700" id="ring-fiber-val">0</text></svg>
+        <span class="ring-label">Fiber</span><span class="ring-sub" style="color:#60a5fa;">/22g</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <span class="lbl">💧 Water — <span id="water-display">0</span> / 62 oz</span>
+    <div class="bar-bg"><div id="water-bar" class="bar-fill" style="width:0%;background:#60a5fa;"></div></div>
+    <div class="water-row">
+      <button class="btn btn-small btn-blue-sm" onclick="addWater(8)">+8oz</button>
+      <button class="btn btn-small btn-blue-sm" onclick="addWater(16)">+16oz</button>
+      <button class="btn btn-small btn-blue-sm" onclick="addWater(32)">+32oz</button>
+      <button class="btn btn-small btn-gray" onclick="resetWater()">Reset</button>
+    </div>
+  </div>
+
+  <div class="card" id="today-workouts-card">
+    <span class="lbl">Today's Workouts</span>
+    <div id="today-workouts-list"></div>
+  </div>
+
+  <div class="card">
+    <span class="lbl">Goals</span>
+    <div class="row"><span class="goal-label">Weight</span><span class="goal-val">125–130 lbs</span></div>
+    <div class="row"><span class="goal-label">Body Fat</span><span class="goal-val" style="color:#34d399;">&lt; 20%</span></div>
+    <div class="row"><span class="goal-label">Muscle Mass</span><span class="goal-val">55+ lbs</span></div>
+  </div>
+</div>
+
+<!-- ── MEALS ── -->
+<div id="tab-meals" class="section" style="display:none;">
+  <div class="card">
+    <span class="lbl">Log a Meal</span>
+    <div id="photo-area">
+      <div class="photo-drop" onclick="document.getElementById('photo-input').click()">
+        <div style="font-size:28px;margin-bottom:4px;">📷</div>
+        Tap to take or upload a meal photo
+      </div>
+    </div>
+    <input type="file" id="photo-input" accept="image/*" capture="environment" style="display:none;" onchange="onPhotoChange(event)"/>
+    <textarea id="meal-text" class="inp" rows="2" placeholder="Optional description… e.g. 'large portion, added olive oil'"></textarea>
+    <div id="meal-error" class="err" style="display:none;"></div>
+    <button class="btn btn-accent" id="meal-btn" onclick="logMeal()">✦ Analyze &amp; Log Meal</button>
+  </div>
+  <div id="meals-list">
+    <div class="card empty"><div class="ico">🥗</div><p>Take a photo or describe a meal above.</p></div>
+  </div>
+</div>
+
+<!-- ── WORKOUTS ── -->
+<div id="tab-workouts" class="section" style="display:none;">
+  <div class="card card-teal">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+      <span style="font-size:16px;">📅</span>
+      <span style="font-size:12px;font-weight:700;color:#2dd4bf;">From Google Calendar — Today</span>
+    </div>
+    <span style="font-size:11px;color:#7b7f9e;">Workouts pulled automatically from your schedule. Teacher Training excluded.</span>
+  </div>
+  <div id="workouts-list"></div>
+  <div class="card">
+    <span class="lbl">+ Log Additional Workout</span>
+    <textarea id="workout-text" class="inp" rows="2" placeholder="e.g. '45 min run' or '30 min upper body strength'"></textarea>
+    <div id="workout-error" class="err" style="display:none;"></div>
+    <button class="btn btn-green" id="workout-btn" onclick="logWorkout()">✦ Log Workout</button>
+  </div>
+</div>
+
+<!-- ── RECIPES ── -->
+<div id="tab-recipes" class="section" style="display:none;">
+  <div class="card">
+    <span class="lbl">Meal Ideas &amp; Recipes</span>
+    <p style="color:#7b7f9e;font-size:12px;margin-bottom:10px;">AI-generated plant-based recipes tailored to your protocol.</p>
+    <div class="recipe-cats" id="recipe-cats"></div>
+    <input id="recipe-prompt" class="inp" placeholder="Or describe what you want… e.g. 'post-workout bowl under 600 cal'"/>
+    <div id="recipe-error" class="err" style="display:none;"></div>
+    <button class="btn btn-orange" id="recipe-btn" onclick="getRecipes()">✦ Get Recipe Ideas</button>
+  </div>
+  <div id="recipes-list">
+    <div class="card empty"><div class="ico" style="font-size:32px;">🌱</div><p>Pick a category or describe what you're craving, then tap Get Recipe Ideas.</p></div>
+  </div>
+</div>
+
+<!-- ── SCHEDULE ── -->
+<div id="tab-schedule" class="section" style="display:none;">
+  <div class="day-scroll" id="day-scroll"></div>
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <span class="lbl" id="selected-day-label" style="margin-bottom:0;"></span>
+      <span class="cal-badge">📅 Google Calendar</span>
+    </div>
+    <div id="day-events-list"></div>
+  </div>
+  <div class="card">
+    <span class="lbl">Protocol Targets</span>
+    <div class="row"><span class="goal-label">Calories</span><span style="color:#a78bfa;font-weight:700;font-size:13px;">3067 kcal</span></div>
+    <div class="row"><span class="goal-label">Protein</span><span style="color:#a78bfa;font-weight:700;font-size:13px;">191g</span></div>
+    <div class="row"><span class="goal-label">Carbs</span><span style="color:#a78bfa;font-weight:700;font-size:13px;">345g</span></div>
+    <div class="row"><span class="goal-label">Fats</span><span style="color:#a78bfa;font-weight:700;font-size:13px;">102g</span></div>
+    <div class="row"><span class="goal-label">Fiber</span><span style="color:#a78bfa;font-weight:700;font-size:13px;">22g/day</span></div>
+    <div class="row"><span class="goal-label">Water</span><span style="color:#a78bfa;font-weight:700;font-size:13px;">62 oz/day</span></div>
+  </div>
+</div>
+
+<script>
+// ── API KEY ──
+let ANTHROPIC_API_KEY = localStorage.getItem('bridget_api_key') || '';
+function showKeyScreen(){document.getElementById('key-screen').style.display='flex';}
+function hideKeyScreen(){document.getElementById('key-screen').style.display='none';}
+function saveKey(){
+  const k=document.getElementById('key-input').value.trim();
+  if(!k.startsWith('sk-ant-')){document.getElementById('key-error').style.display='block';return;}
+  localStorage.setItem('bridget_api_key',k);
+  ANTHROPIC_API_KEY=k;
+  hideKeyScreen();
+}
+function clearKey(){
+  localStorage.removeItem('bridget_api_key');
+  ANTHROPIC_API_KEY='';
+  document.getElementById('key-input').value='';
+  showKeyScreen();
+}
+
+// ── STATE ──
+const GOALS = {calories:3067,protein:191,carbs:345,fats:102,fiber:22,water:62};
+let meals = [];
+let waterOz = 0;
+let photoB64 = null;
+let photoMediaType = "image/jpeg";
+let photoPreviewUrl = null;
+let workouts = [
+  {id:"cal-1",name:"🧘 CorePower Class",type:"Yoga",duration:60,caloriesBurned:280,time:"9:30 AM",notes:"CorePower drop-in — book at corepoweryoga.com",fromCalendar:true}
+];
+let recipeCategory = "High Protein";
+let recipes = [];
+let expandedRecipe = null;
+let selectedDay = 3;
+let currentTab = "today";
+
+const RECIPE_CATEGORIES = ["High Protein","Post-Workout","Quick & Easy","Meal Prep","Plant-Based"];
+
+const DAY_LABELS = ["Mon Jun 22","Tue Jun 23","Wed Jun 24","Thu Jun 25","Fri Jun 26","Sat Jun 27","Sun Jun 28"];
+const DAY_DATES  = ["2026-06-22","2026-06-23","2026-06-24","2026-06-25","2026-06-26","2026-06-27","2026-06-28"];
+
+const CALENDAR_EVENTS = [
+  {title:"Team Buildr Lift 💪",start:"2026-06-22T09:00:00-04:00",end:"2026-06-22T11:00:00-04:00",color:"#f87171",type:"workout"},
+  {title:"🧗 Rock Climbing",start:"2026-06-22T12:00:00-04:00",end:"2026-06-22T13:30:00-04:00",color:"#fbbf24",type:"workout"},
+  {title:"Meal Prep",start:"2026-06-22T14:00:00-04:00",end:"2026-06-22T15:00:00-04:00",color:"#34d399",type:"meal"},
+  {title:"🧘 CorePower Class",start:"2026-06-22T19:00:00-04:00",end:"2026-06-22T20:00:00-04:00",color:"#2dd4bf",type:"workout"},
+  {title:"🧘 CorePower Class",start:"2026-06-23T09:30:00-04:00",end:"2026-06-23T10:30:00-04:00",color:"#2dd4bf",type:"workout"},
+  {title:"📚 Yoga TT – Self-Study",start:"2026-06-23T11:00:00-04:00",end:"2026-06-23T13:00:00-04:00",color:"#7b7f9e",type:"other"},
+  {title:"🧘 CorePower TT – Live Zoom",start:"2026-06-23T18:00:00-04:00",end:"2026-06-23T21:30:00-04:00",color:"#7b7f9e",type:"other"},
+  {title:"Team Buildr Lift 💪",start:"2026-06-24T09:00:00-04:00",end:"2026-06-24T11:00:00-04:00",color:"#f87171",type:"workout"},
+  {title:"🧗 Rock Climbing – Crowders Mtn",start:"2026-06-24T10:00:00-04:00",end:"2026-06-24T11:00:00-04:00",color:"#fbbf24",type:"workout"},
+  {title:"🧘 CorePower Class",start:"2026-06-24T15:00:00-04:00",end:"2026-06-24T16:00:00-04:00",color:"#2dd4bf",type:"workout"},
+  {title:"🧘 CorePower Class",start:"2026-06-25T09:30:00-04:00",end:"2026-06-25T10:30:00-04:00",color:"#2dd4bf",type:"workout"},
+  {title:"📚 Yoga TT – Self-Study",start:"2026-06-25T11:00:00-04:00",end:"2026-06-25T13:00:00-04:00",color:"#7b7f9e",type:"other"},
+  {title:"Meal Prep",start:"2026-06-25T13:00:00-04:00",end:"2026-06-25T14:00:00-04:00",color:"#34d399",type:"meal"},
+  {title:"Vyve",start:"2026-06-25T14:15:00-04:00",end:"2026-06-25T15:15:00-04:00",color:"#7c5cfc",type:"other"},
+  {title:"🧘 CorePower TT – Live Zoom",start:"2026-06-25T18:00:00-04:00",end:"2026-06-25T21:30:00-04:00",color:"#7b7f9e",type:"other"},
+  {title:"Team Buildr Lift 💪",start:"2026-06-26T09:00:00-04:00",end:"2026-06-26T11:00:00-04:00",color:"#f87171",type:"workout"},
+  {title:"🧘 CorePower Class",start:"2026-06-26T11:45:00-04:00",end:"2026-06-26T12:45:00-04:00",color:"#2dd4bf",type:"workout"},
+  {title:"📚 Yoga TT – Self-Study",start:"2026-06-26T11:00:00-04:00",end:"2026-06-26T13:00:00-04:00",color:"#7b7f9e",type:"other"},
+  {title:"CVS Vaccine Appointment",start:"2026-06-26T14:45:00-04:00",end:"2026-06-26T15:45:00-04:00",color:"#60a5fa",type:"other"},
+  {title:"🏆 Continental Cup",start:"2026-06-27T00:00:00",end:"2026-06-29T00:00:00",color:"#fbbf24",type:"other",allDay:true}
+];
+
+// ── INIT ──
+document.getElementById("today-date").textContent = new Date().toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric"});
+buildRecipeCats();
+buildDayScroll();
+renderWorkouts();
+renderTodayWorkouts();
+renderSchedule();
+
+// ── TAB SWITCHING ──
+function switchTab(t){
+  currentTab=t;
+  document.querySelectorAll(".tab-btn").forEach(b=>b.classList.toggle("active",b.dataset.tab===t));
+  ["today","meals","workouts","recipes","schedule"].forEach(id=>{
+    document.getElementById("tab-"+id).style.display=id===t?"block":"none";
+  });
+}
+
+// ── TOTALS ──
+function getTotals(){
+  return meals.reduce((a,m)=>({
+    calories:a.calories+(m.calories||0),
+    protein:a.protein+(m.protein||0),
+    carbs:a.carbs+(m.carbs||0),
+    fats:a.fats+(m.fats||0),
+    fiber:a.fiber+(m.fiber||0)
+  }),{calories:0,protein:0,carbs:0,fats:0,fiber:0});
+}
+function getCalBurned(){return workouts.reduce((a,w)=>a+(w.caloriesBurned||0),0);}
+function calColor(pct){return pct>1?"#f87171":pct>0.8?"#34d399":"#fbbf24";}
+function ring(pct){const c=2*Math.PI*26;return`${Math.min(pct,1)*c} ${c}`;}
+
+function updateDashboard(){
+  const t=getTotals(); const burned=getCalBurned();
+  const pct=t.calories/GOALS.calories; const cc=calColor(pct);
+  document.getElementById("cal-big").textContent=t.calories;
+  document.getElementById("cal-big").style.color=cc;
+  document.getElementById("cal-bar").style.width=Math.min(pct*100,100)+"%";
+  document.getElementById("cal-bar").style.background=cc;
+  if(burned>0){
+    const r=document.getElementById("cal-burned-row");
+    r.style.display="block";
+    r.textContent=`🔥 ${burned} burned · Net: ${t.calories-burned} kcal`;
+  }
+  // rings
+  const rp=t.protein/GOALS.protein;
+  document.getElementById("ring-protein").setAttribute("stroke-dasharray",ring(rp));
+  document.getElementById("ring-protein-val").textContent=t.protein;
+  const rc=t.carbs/GOALS.carbs;
+  document.getElementById("ring-carbs").setAttribute("stroke-dasharray",ring(rc));
+  document.getElementById("ring-carbs-val").textContent=t.carbs;
+  const rf=t.fats/GOALS.fats;
+  document.getElementById("ring-fats").setAttribute("stroke-dasharray",ring(rf));
+  document.getElementById("ring-fats-val").textContent=t.fats;
+  const rfi=t.fiber/GOALS.fiber;
+  document.getElementById("ring-fiber").setAttribute("stroke-dasharray",ring(rfi));
+  document.getElementById("ring-fiber-val").textContent=t.fiber;
+}
+
+// ── WATER ──
+function addWater(oz){waterOz=Math.min(waterOz+oz,82);renderWater();}
+function resetWater(){waterOz=0;renderWater();}
+function renderWater(){
+  document.getElementById("water-display").textContent=waterOz;
+  document.getElementById("water-bar").style.width=Math.min((waterOz/GOALS.water)*100,100)+"%";
+}
+
+// ── PHOTO ──
+function onPhotoChange(e){
+  const file=e.target.files[0]; if(!file)return;
+  photoMediaType=file.type||"image/jpeg";
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    photoPreviewUrl=ev.target.result;
+    photoB64=ev.target.result.split(",")[1];
+    renderPhotoArea();
+  };
+  reader.readAsDataURL(file);
+}
+function clearPhoto(){
+  photoB64=null; photoPreviewUrl=null;
+  document.getElementById("photo-input").value="";
+  renderPhotoArea();
+}
+function renderPhotoArea(){
+  const area=document.getElementById("photo-area");
+  if(photoPreviewUrl){
+    area.innerHTML=`<div class="photo-preview"><img src="${photoPreviewUrl}"/><button class="photo-clear" onclick="clearPhoto()">✕</button><div class="photo-badge">📸 Photo ready</div></div>`;
+  } else {
+    area.innerHTML=`<div class="photo-drop" onclick="document.getElementById('photo-input').click()"><div style="font-size:28px;margin-bottom:4px;">📷</div>Tap to take or upload a meal photo</div>`;
+  }
+}
+
+// ── LOG MEAL ──
+async function logMeal(){
+  const text=document.getElementById("meal-text").value.trim();
+  if(!text&&!photoB64)return;
+  const btn=document.getElementById("meal-btn");
+  btn.disabled=true; btn.textContent="Analyzing…";
+  document.getElementById("meal-error").style.display="none";
+  try{
+    const content=[];
+    if(photoB64) content.push({type:"image",source:{type:"base64",media_type:photoMediaType,data:photoB64}});
+    content.push({type:"text",text:`Analyze this meal${photoB64?" from the photo":""}${text?` with description: "${text}"`:""}. Return ONLY JSON (no markdown): {"name":string,"calories":int,"protein":int,"carbs":int,"fats":int,"fiber":int}`});
+    if(!ANTHROPIC_API_KEY){showKeyScreen();btn.disabled=false;btn.textContent="✦ Analyze & Log Meal";return;}
+    const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":ANTHROPIC_API_KEY,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:500,messages:[{role:"user",content}]})});
+    const data=await res.json();
+    const txt=data.content?.find(b=>b.type==="text")?.text||"";
+    const parsed=JSON.parse(txt.replace(/```json|```/g,"").trim());
+    meals.push({...parsed,id:Date.now(),time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),photo:photoPreviewUrl});
+    document.getElementById("meal-text").value="";
+    clearPhoto();
+    renderMeals(); updateDashboard();
+  } catch(e){
+    const err=document.getElementById("meal-error");
+    err.textContent="Couldn't analyze that. Check your API key or try again.";
+    err.style.display="block";
+  }
+  btn.disabled=false; btn.textContent="✦ Analyze & Log Meal";
+}
+
+function removeMeal(id){meals=meals.filter(m=>m.id!==id);renderMeals();updateDashboard();}
+
+function renderMeals(){
+  const list=document.getElementById("meals-list");
+  if(meals.length===0){list.innerHTML='<div class="card empty"><div class="ico">🥗</div><p>Take a photo or describe a meal above.</p></div>';return;}
+  const t=getTotals(); const cc=calColor(t.calories/GOALS.calories);
+  list.innerHTML=meals.map(m=>`
+    <div class="card">
+      ${m.photo?`<img class="meal-img" src="${m.photo}"/>`:""}
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div><span style="font-weight:700;font-size:14px;">${m.name}</span><span style="color:#7b7f9e;font-size:11px;margin-left:6px;">${m.time}</span></div>
+        <span class="pill" style="background:${cc}28;color:${cc};">${m.calories} kcal</span>
+      </div>
+      <div class="meal-pills">
+        <span class="pill" style="background:#7c5cfc28;color:#7c5cfc;">P: ${m.protein}g</span>
+        <span class="pill" style="background:#fbbf2428;color:#fbbf24;">C: ${m.carbs}g</span>
+        <span class="pill" style="background:#34d39928;color:#34d399;">F: ${m.fats}g</span>
+        <span class="pill" style="background:#60a5fa28;color:#60a5fa;">Fi: ${m.fiber}g</span>
+      </div>
+      <button class="remove-btn" onclick="removeMeal(${m.id})">Remove</button>
+    </div>`).join("");
+}
+
+// ── LOG WORKOUT ──
+async function logWorkout(){
+  const text=document.getElementById("workout-text").value.trim();
+  if(!text)return;
+  const btn=document.getElementById("workout-btn");
+  btn.disabled=true; btn.textContent="Logging…";
+  document.getElementById("workout-error").style.display="none";
+  try{
+    if(!ANTHROPIC_API_KEY){showKeyScreen();btn.disabled=false;btn.textContent="✦ Log Workout";return;}
+    const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":ANTHROPIC_API_KEY,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:400,messages:[{role:"user",content:`Parse workout: "${text}". Return ONLY JSON: {"name":string,"type":"Strength|Cardio|HIIT|Yoga|Sports|Rest Day","duration":int,"caloriesBurned":int,"notes":string}`}]})});
+    const data=await res.json();
+    const txt=data.content?.find(b=>b.type==="text")?.text||"";
+    const parsed=JSON.parse(txt.replace(/```json|```/g,"").trim());
+    workouts.push({...parsed,id:Date.now(),time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),fromCalendar:false});
+    document.getElementById("workout-text").value="";
+    renderWorkouts(); renderTodayWorkouts(); updateDashboard();
+  } catch(e){
+    const err=document.getElementById("workout-error");
+    err.textContent="Try: '45 min run' or '30 min upper body strength'.";
+    err.style.display="block";
+  }
+  btn.disabled=false; btn.textContent="✦ Log Workout";
+}
+
+function removeWorkout(id){workouts=workouts.filter(w=>w.id!==id);renderWorkouts();renderTodayWorkouts();updateDashboard();}
+
+const WORKOUT_COLORS={"Strength":"#7c5cfc","Cardio":"#34d399","HIIT":"#f87171","Yoga":"#f0abfc","Rest Day":"#7b7f9e","Sports":"#fbbf24"};
+
+function renderWorkouts(){
+  const list=document.getElementById("workouts-list");
+  list.innerHTML=workouts.map(w=>`
+    <div class="card" style="border-left:3px solid ${w.fromCalendar?"#2dd4bf":"#7c5cfc"};">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div style="flex:1;">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span style="font-weight:700;font-size:14px;">${w.name}</span>
+            ${w.fromCalendar?'<span class="cal-tag">📅 Cal</span>':""}
+          </div>
+          <span style="color:#7b7f9e;font-size:11px;">${w.time}</span>
+        </div>
+        <span class="pill" style="background:#34d39928;color:#34d399;">🔥 ${w.caloriesBurned} kcal</span>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">
+        <span class="pill" style="background:${(WORKOUT_COLORS[w.type]||"#7c5cfc")}28;color:${WORKOUT_COLORS[w.type]||"#7c5cfc"};">${w.type}</span>
+        <span class="pill" style="background:#fbbf2428;color:#fbbf24;">⏱ ${w.duration} min</span>
+      </div>
+      ${w.notes?`<p style="color:#7b7f9e;font-size:12px;margin-top:6px;margin-bottom:4px;">${w.notes}</p>`:""}
+      <button class="remove-btn" onclick="removeWorkout('${w.id}')">Remove</button>
+    </div>`).join("");
+}
+
+function renderTodayWorkouts(){
+  const list=document.getElementById("today-workouts-list");
+  const todayW=workouts.filter(w=>w.fromCalendar);
+  if(todayW.length===0){list.innerHTML='<p style="color:#7b7f9e;font-size:13px;">No calendar workouts today.</p>';return;}
+  list.innerHTML=todayW.map(w=>`
+    <div class="today-workout-row">
+      <div class="today-workout-bar"></div>
+      <div style="flex:1;">
+        <div style="font-size:13px;font-weight:600;">${w.name}</div>
+        <div style="font-size:11px;color:#7b7f9e;">${w.time} · ${w.duration} min · 🔥${w.caloriesBurned} kcal</div>
+      </div>
+    </div>`).join("");
+}
+
+// ── RECIPES ──
+function buildRecipeCats(){
+  const c=document.getElementById("recipe-cats");
+  c.innerHTML=RECIPE_CATEGORIES.map(cat=>`<button class="cat-btn${cat===recipeCategory?" active":""}" onclick="selectCat('${cat}')">${cat}</button>`).join("");
+}
+function selectCat(cat){recipeCategory=cat;buildRecipeCats();}
+
+async function getRecipes(){
+  const prompt=document.getElementById("recipe-prompt").value.trim();
+  const btn=document.getElementById("recipe-btn");
+  btn.disabled=true; btn.textContent="Generating recipes…";
+  document.getElementById("recipe-error").style.display="none";
+  document.getElementById("recipes-list").innerHTML='<div class="card empty"><div class="ico" style="font-size:28px;">👩‍🍳</div><p>Cooking up ideas for you…</p></div>';
+  recipes=[]; expandedRecipe=null;
+  try{
+    const p=prompt?`Give me 3 plant-based, no-seafood meal ideas matching: "${prompt}". Each should support these daily goals: 191g protein, 3067 kcal, 345g carbs.`:`Give me 3 plant-based, no-seafood ${recipeCategory} meal ideas for someone with these daily goals: 191g protein, 3067 kcal, 345g carbs, 102g fats. Focus on high-protein plant sources like tempeh, lentils, edamame, tofu, seitan, chickpeas.`;
+    if(!ANTHROPIC_API_KEY){showKeyScreen();btn.disabled=false;btn.textContent="✦ Get Recipe Ideas";return;}
+    const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":ANTHROPIC_API_KEY,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:1500,messages:[{role:"user",content:`${p}\n\nReturn ONLY a JSON array (no markdown):\n[{"name":string,"emoji":string,"time":string,"servings":int,"calories":int,"protein":int,"carbs":int,"fats":int,"fiber":int,"ingredients":["string"],"steps":["string"],"tip":string}]`}]})});
+    const data=await res.json();
+    const txt=data.content?.find(b=>b.type==="text")?.text||"";
+    recipes=JSON.parse(txt.replace(/```json|```/g,"").trim());
+    renderRecipes();
+  } catch(e){
+    const err=document.getElementById("recipe-error");
+    err.textContent="Couldn't generate recipes. Try again.";
+    err.style.display="block";
+    document.getElementById("recipes-list").innerHTML='<div class="card empty"><div class="ico" style="font-size:32px;">🌱</div><p>Pick a category or describe what you\'re craving, then tap Get Recipe Ideas.</p></div>';
+  }
+  btn.disabled=false; btn.textContent="✦ Get Recipe Ideas";
+}
+
+function toggleRecipe(i){expandedRecipe=expandedRecipe===i?null:i;renderRecipes();}
+
+function renderRecipes(){
+  const t=getTotals(); const cc=calColor(t.calories/GOALS.calories);
+  if(recipes.length===0){
+    document.getElementById("recipes-list").innerHTML='<div class="card empty"><div class="ico" style="font-size:32px;">🌱</div><p>Pick a category or describe what you\'re craving, then tap Get Recipe Ideas.</p></div>';
+    return;
+  }
+  document.getElementById("recipes-list").innerHTML=recipes.map((r,i)=>`
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+        <div style="flex:1;">
+          <div style="font-size:18px;margin-bottom:2px;">${r.emoji}</div>
+          <div style="font-weight:700;font-size:15px;">${r.name}</div>
+          <div style="color:#7b7f9e;font-size:12px;margin-top:2px;">⏱ ${r.time} · ${r.servings} serving${r.servings!==1?"s":""}</div>
+        </div>
+        <span class="pill" style="background:${cc}28;color:${cc};">${r.calories} kcal</span>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
+        <span class="pill" style="background:#7c5cfc28;color:#7c5cfc;">P: ${r.protein}g</span>
+        <span class="pill" style="background:#fbbf2428;color:#fbbf24;">C: ${r.carbs}g</span>
+        <span class="pill" style="background:#34d39928;color:#34d399;">F: ${r.fats}g</span>
+        <span class="pill" style="background:#60a5fa28;color:#60a5fa;">Fi: ${r.fiber}g</span>
+      </div>
+      <button class="recipe-expand-btn" onclick="toggleRecipe(${i})">${expandedRecipe===i?"▲ Hide Recipe":"▼ View Full Recipe"}</button>
+      ${expandedRecipe===i?`
+        <div style="margin-top:12px;">
+          <span class="lbl" style="margin-bottom:6px;">Ingredients</span>
+          ${r.ingredients.map(ing=>`<div style="font-size:13px;color:#7b7f9e;margin-bottom:4px;padding-left:8px;">• ${ing}</div>`).join("")}
+          <span class="lbl" style="margin-top:12px;margin-bottom:6px;">Steps</span>
+          ${r.steps.map((step,j)=>`<div class="step-row"><div class="step-num">${j+1}</div><span style="font-size:13px;color:#7b7f9e;line-height:1.5;">${step}</span></div>`).join("")}
+          ${r.tip?`<div class="tip-box"><span style="font-size:12px;color:#fb923c;font-weight:700;">💡 Pro tip: </span><span style="font-size:12px;color:#7b7f9e;">${r.tip}</span></div>`:""}
+          <button class="btn" style="background:#34d399cc;font-size:12px;margin-top:12px;" onclick="addRecipeToMeals(${i})">✓ Add to Today's Meals</button>
+        </div>`:""}
+    </div>`).join("");
+}
+
+function addRecipeToMeals(i){
+  const r=recipes[i];
+  const t=getTotals();
+  const left=GOALS.calories-t.calories;
+  alert(`This recipe has ${r.calories} kcal. You have ${Math.max(0,left)} kcal left today.`);
+}
+
+// ── SCHEDULE ──
+function buildDayScroll(){
+  const c=document.getElementById("day-scroll");
+  c.innerHTML=DAY_LABELS.map((d,i)=>`<button class="day-btn${i===selectedDay?" active":""}" onclick="selectDay(${i})">${d.split(" ")[0]}<br/><span style="font-size:10px;">${d.split(" ").slice(1).join(" ")}</span></button>`).join("");
+}
+function selectDay(i){selectedDay=i;buildDayScroll();renderSchedule();}
+
+function fmtTime(iso){return new Date(iso).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});}
+
+function renderSchedule(){
+  const dayDate=DAY_DATES[selectedDay];
+  document.getElementById("selected-day-label").textContent=DAY_LABELS[selectedDay];
+  const evs=CALENDAR_EVENTS.filter(ev=>ev.start.startsWith(dayDate)||(ev.allDay&&ev.start.startsWith(dayDate)));
+  const list=document.getElementById("day-events-list");
+  if(evs.length===0){list.innerHTML='<div style="text-align:center;color:#7b7f9e;padding:16px 0;font-size:13px;">No events this day.</div>';return;}
+  list.innerHTML=evs.map(ev=>`
+    <div class="event-row">
+      <div class="event-bar" style="background:${ev.color};"></div>
+      <div style="flex:1;">
+        <div class="event-title">${ev.title}</div>
+        <div class="event-time">${ev.allDay?"All day":`${fmtTime(ev.start)} – ${fmtTime(ev.end)}`}</div>
+      </div>
+      <span class="pill" style="background:${ev.type==="workout"?"#34d39928":"#fbbf2428"};color:${ev.type==="workout"?"#34d399":ev.type==="meal"?"#fbbf24":"#7b7f9e"};">${ev.type==="workout"?"🏋️":ev.type==="meal"?"🥗":"📌"}</span>
+    </div>`).join("");
+}
+
+// ── iOS PWA INPUT FIX ──
+// Forces keyboard to appear on input tap in standalone mode
+document.addEventListener('touchend', function(e) {
+  const el = e.target;
+  if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+    e.preventDefault();
+    el.focus();
+    setTimeout(() => { el.focus(); el.click(); }, 50);
+  }
+}, { passive: false });
+
+document.addEventListener('touchmove', function(e) {
+  const active = document.activeElement;
+  if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA')) {}
+}, { passive: true });
+
+// ── SETTINGS BTN ──
+const hdr = document.getElementById('header');
+const settingsBtn = document.createElement('button');
+settingsBtn.id='settings-btn';
+settingsBtn.innerHTML='⚙️';
+settingsBtn.title='API Key Settings';
+settingsBtn.onclick=showKeyScreen;
+hdr.appendChild(settingsBtn);
+
+// Show key screen on first launch if no key saved
+if(!ANTHROPIC_API_KEY) showKeyScreen();
+
+// Initial render
+updateDashboard();
+</script>
+
+
+
+<!-- ── API KEY SCREEN ── -->
+<div id="key-screen" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(13,15,24,0.97);z-index:9999;flex-direction:column;align-items:center;justify-content:center;padding:24px;">
+  <div style="width:100%;max-width:400px;background:#161927;border-radius:20px;border:1px solid #252840;padding:24px;">
+    <div style="font-size:32px;text-align:center;margin-bottom:12px;">🔑</div>
+    <h2 style="font-size:18px;font-weight:800;text-align:center;margin-bottom:6px;color:#f0eeff;">Enter your API Key</h2>
+    <p style="color:#7b7f9e;font-size:13px;text-align:center;margin-bottom:20px;">Your key is saved only on this device and never shared. Get yours at console.anthropic.com</p>
+    <input id="key-input" type="password" class="inp" placeholder="sk-ant-api03-..." style="margin-bottom:8px;font-size:16px;"/>
+    <div id="key-error" style="display:none;color:#f87171;font-size:12px;margin-bottom:8px;">That doesn't look like a valid Anthropic API key. It should start with sk-ant-</div>
+    <button class="btn btn-accent" onclick="saveKey()" style="margin-top:4px;">Save & Continue</button>
+  </div>
+</div>
+
+<!-- Settings gear in header -->
+<style>
+  #settings-btn{position:absolute;right:16px;top:50%;transform:translateY(-50%);background:none;border:none;color:#7b7f9e;font-size:20px;cursor:pointer;padding:4px;}
+  #header{position:relative;}
+</style>
+
+</body>
+</html>
